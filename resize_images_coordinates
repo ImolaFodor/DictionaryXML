@@ -1,0 +1,39 @@
+from PIL import Image
+import glob
+import os
+import xml.etree.ElementTree as ET
+
+dividings = []
+
+parent_dir = 'resized_rotated_annotated'
+for image_file in glob.glob(os.path.join(parent_dir, '*.jp*')):
+    image = Image.open(image_file)
+    width, height = image.size
+    #print(width, height)
+    resized_image = image.resize((300, 300))
+    resized_image.save(image.filename)
+    width300, height300 = resized_image.size
+    #print(width300, height300)
+    divide = width/width300
+    #print(divide)
+    dividings.append(divide)
+    #print(dividings)
+
+i = 0
+for xml_file in glob.glob(os.path.join(parent_dir, '*.xml')):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    key: object
+
+    for elem in tree.iter(tag='xmin'):
+        elem.text = str(int(int(elem.text)/dividings[i]))
+    for elem in tree.iter(tag='ymin'):
+        elem.text = str(int(int(elem.text)/dividings[i]))
+    for elem in tree.iter(tag='xmax'):
+        elem.text = str(int(int(elem.text) / dividings[i]))
+    for elem in tree.iter(tag='ymax'):
+        elem.text = str(int(int(elem.text) / dividings[i]))
+    i = i + 1
+    tree.write(xml_file)
+
